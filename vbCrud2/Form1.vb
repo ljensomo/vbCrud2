@@ -9,6 +9,8 @@
         da = New Odbc.OdbcDataAdapter(sql, con)
         da.Fill(dt)
         dgv.DataSource = dt
+
+        con.Close()
     End Sub
 
     Public Sub cleaner()
@@ -17,6 +19,7 @@
         txtboxMname.Text = ""
         txtboxLname.Text = ""
         dgv.Tag = 0
+        toggle(False)
     End Sub
 
     Public Sub loadEmployeeRecord(id As Integer)
@@ -35,20 +38,31 @@
         txtboxMname.Text = dt.Rows(0)(3)
         txtboxLname.Text = dt.Rows(0)(4)
 
+        con.Close()
+
+    End Sub
+
+    Public Sub toggle(status As Boolean)
+        groupboxEmployee.Enabled = status
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         loadTable()
+        toggle(False)
 
+        dgv.CurrentCell.Selected = False
     End Sub
 
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         If txtboxEmpID.Text = "" Then
-            MsgBox("Please input employee ID!")
+            MsgBox("Please input employee ID!", vbExclamation, "Ooops!")
+            txtboxEmpID.Focus()
         ElseIf txtboxFname.Text = "" Then
-            MsgBox("Please input First Name!")
+            MsgBox("Please input First Name!", vbExclamation, "Ooops!")
+            txtboxFname.Focus()
         ElseIf txtboxLname.Text = "" Then
-            MsgBox("Please input Last Name!")
+            MsgBox("Please input Last Name!", vbExclamation, "Ooops!")
+            txtboxLname.Focus()
         Else
             Call connect()
             Dim cmd As Odbc.OdbcCommand
@@ -77,6 +91,8 @@
                 cmd.ExecuteNonQuery()
             End If
 
+            con.Close()
+
             loadTable()
             cleaner()
 
@@ -84,15 +100,18 @@
     End Sub
 
     Private Sub dgv_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgv.CellClick
-        dgv.Tag = dgv.Item(0, e.RowIndex).Value
+        If (e.RowIndex >= 0) Then
+            dgv.Tag = dgv.Item(0, e.RowIndex).Value
+        End If
 
     End Sub
 
     Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
         If Val(dgv.Tag) > 0 Then
             loadEmployeeRecord(Val(dgv.Tag))
+            toggle(True)
         Else
-            MsgBox("Please select a record!")
+            MsgBox("Please select a record!", vbExclamation, "Ooops!")
         End If
 
     End Sub
@@ -107,13 +126,22 @@
                 cmd = New Odbc.OdbcCommand(sql, con)
                 cmd.Parameters.AddWithValue("@", dgv.Tag)
                 cmd.ExecuteNonQuery()
+                con.Close()
 
                 loadTable()
                 cleaner()
 
             End If
         Else
-                MsgBox("Please select a record!")
+            MsgBox("Please select a record!", vbExclamation, "Ooops!")
         End If
+    End Sub
+
+    Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
+        Call cleaner()
+    End Sub
+
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        toggle(True)
     End Sub
 End Class
